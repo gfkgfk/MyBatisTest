@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.test.maybatis.guide.dao.PersonMapper">
+    <insert id="addPerson" useGeneratedKeys="true" keyProperty="id" databaseId="mysql">
+        INSERT INTO `person`(`name`, `hobbys`)
+        VALUES (#{name}, #{hobbys,typeHandler=com.test.maybatis.guide.typehandler.ListTypeHandler})
+    </insert>
+    <select id="getPerson" databaseId="mysql" resultType="com.test.maybatis.guide.bean.Person">
+        SELECT *
+        FROM `person`
+        WHERE id = #{id};
+    </select>
+
+
+</mapper>

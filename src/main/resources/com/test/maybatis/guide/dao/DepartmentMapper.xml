@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.test.maybatis.guide.dao.DepartmentMapper">
+    <select id="getDepById" databaseId="mysql" resultType="com.test.maybatis.guide.bean.Department">
+        SELECT *
+        FROM `department`
+        WHERE `dep_id` = #{id}
+
+    </select>
+    <resultMap type="com.test.maybatis.guide.bean.Department" id="depCascadeEmps1">
+        <!-- 设置主键映射 -->
+        <id column="dep_id" property="depId"/>
+        <!-- 普通字段映射 -->
+        <result column="dep_name" property="depName"/>
+        <!-- 级联查询员工 -->
+        <collection property="emps" ofType="com.test.maybatis.guide.bean.Employee">
+            <!-- 设置主键映射 -->
+            <id column="id" property="id"/>
+            <!-- 普通字段映射 -->
+            <result column="last_name" property="lastName"/>
+            <result column="email" property="email"/>
+            <result column="gender" property="gender"/>
+        </collection>
+    </resultMap>
+    <select id="getDepByIdWithEmps1" resultMap="depCascadeEmps1" databaseId="mysql">
+        SELECT *
+        FROM employee e,
+             department d
+        WHERE e.dep_id = d.dep_id
+          AND d.dep_id = #{depId};
+    </select>
+
+    <resultMap type="com.test.maybatis.guide.bean.Department" id="depCascadeEmps2">
+        <!-- 设置主键映射 -->
+        <id column="dep_id" property="depId" />
+        <!-- 普通字段映射 -->
+        <result column="dep_name" property="depName" />
+        <!-- 级联查询员工 -->
+        <collection property="emps"
+                    select="com.test.maybatis.guide.dao.EmployeeMapper.getEmpByDepId"
+                    column="dep_id">
+        </collection>
+    </resultMap>
+    <select id="getDepByIdWithEmps2" resultMap="depCascadeEmps2">
+        SELECT * FROM `department` WHERE `dep_id` = #{id}
+    </select>
+</mapper>

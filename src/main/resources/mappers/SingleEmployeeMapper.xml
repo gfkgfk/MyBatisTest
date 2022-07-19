@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.test.maybatis.guide.singleDao.SingleEmployeeMapper">
+    <resultMap id="BaseResultMap" type="com.test.maybatis.guide.bean.Employee">
+        <result column="id" property="id" />
+        <result column="last_name" property="lastName" />
+        <result column="email" property="email" />
+        <result column="gender" property="gender" />
+    </resultMap>
+    <insert id="addEmp" parameterType="com.test.maybatis.guide.singleDao.SingleEmployeeMapper" useGeneratedKeys="true" keyProperty="id" databaseId="mysql">
+        INSERT INTO `employee`(`last_name`,`email`,`gender`)
+        VALUES(#{lastName},#{email},#{gender})
+    </insert>
+    <!-- public Employee getEmpById(Integer id); -->
+    <select id="getEmpById" resultType="com.test.maybatis.guide.singleDao.SingleEmployeeMapper" resultMap="BaseResultMap" databaseId="mysql">
+        SELECT * FROM `employee` WHERE `id` = #{id}
+    </select>
+
+    <!-- public boolean updateEmp(Employee employee); -->
+    <update id="updateEmp" databaseId="mysql">
+        UPDATE `employee`
+        SET `last_name`=#{lastName},`email`=#{email},`gender`=#{gender}
+        WHERE `id`=#{id}
+    </update>
+
+    <!-- public Long deleteEmpById(Integer id); -->
+    <delete id="deleteEmpById" databaseId="mysql">
+        DELETE FROM `employee` WHERE `id`=#{id}
+    </delete>
+
+</mapper>

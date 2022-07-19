@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.test.maybatis.guide.dao.EmployeeMapper">
+    <resultMap id="BaseResultMap" type="com.test.maybatis.guide.bean.Employee">
+        <result column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="email" property="email"/>
+        <result column="gender" property="gender"/>
+    </resultMap>
+    <insert id="addEmp" parameterType="com.test.maybatis.guide.bean.Employee" useGeneratedKeys="true" keyProperty="id"
+            databaseId="mysql">
+        INSERT INTO `employee`(`last_name`, `email`, `gender`)
+        VALUES (#{lastName}, #{email}, #{gender})
+    </insert>
+    <!-- public Employee getEmpById(Integer id); -->
+    <select id="getEmpById" resultType="com.test.maybatis.guide.bean.Employee" resultMap="BaseResultMap"
+            databaseId="mysql">
+        SELECT *
+        FROM `employee`
+        WHERE `id` = #{id}
+    </select>
+
+    <!-- public boolean updateEmp(Employee employee); -->
+    <update id="updateEmp" databaseId="mysql">
+        UPDATE `employee`
+        SET `last_name`=#{lastName},
+            `email`=#{email},
+            `gender`=#{gender}
+        WHERE `id` = #{id}
+    </update>
+
+    <!-- public Long deleteEmpById(Integer id); -->
+    <delete id="deleteEmpById" databaseId="mysql">
+        DELETE
+        FROM `employee`
+        WHERE `id` = #{id}
+    </delete>
+    <!--    #{ }：是预编译处理，MyBatis在处理#{ }时，它会将sql中的#{ }替换为？，然后调用PreparedStatement的set方法来赋值，传入字符串后，会在值两边加上单引号，使用占位符的方式提高效率，可以防止sql注入。
+    ${ }：表示拼接sql串，将接收到参数的内容不加任何修饰拼接在sql中，可能引发sql注入。-->
+    <select id="getEmpLikeLastName" databaseId="mysql" resultType="com.test.maybatis.guide.bean.Employee">
+        SELECT *
+        FROM `employee`
+        WHERE `last_name` LIKE '%${lastName}%'
+    </select>
+
+    <select id="getEmpsOrderByIdDesc" databaseId="mysql" resultType="com.test.maybatis.guide.bean.Employee">
+        SELECT *
+        FROM `employee`
+        ORDER BY id DESC
+    </select>
+
+    <select id="getEmpsByPage" databaseId="mysql" resultType="com.test.maybatis.guide.bean.Employee">
+        SELECT *
+        FROM `employee`
+        ORDER BY id DESC
+    </select>
+
+    <update id="updateTime" databaseId="mysql">
+        UPDATE `employee`
+        SET `last_name`=#{lastName},
+            `email`=#{email},
+            `gender`=#{gender},
+            `date`=#{date}
+        WHERE `id` = #{id}
+    </update>
+
+    <insert id="addList" useGeneratedKeys="true" databaseId="mysql">
+        INSERT INTO `employee`(`last_name`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item})
+        </foreach>
+    </insert>
+    <select id="getAllEmps" resultType="map" databaseId="mysql">
+        SELECT *
+        FROM `employee`
+        WHERE id = 1
+    </select>
+    <select id="getAllEmpsList" resultType="map" databaseId="mysql">
+        SELECT *
+        FROM `employee`
+    </select>
+
+
+    <resultMap type="com.test.maybatis.guide.bean.Employee" id="empCascadeDep1">
+        <!-- 设置主键映射 -->
+        <id column="id" property="id"/>
+        <!-- 普通字段映射 -->
+        <result column="last_name" property="lastName"/>
+        <result column="email" property="email"/>
+        <result column="gender" property="gender"/>
+        <!-- 级联查询部门 -->
+        <result column="dep_id" property="dep.depId"/>
+        <result column="dep_name" property="dep.depName"/>
+    </resultMap>
+    <select id="getEmpByIdWithDep" resultMap="empCascadeDep1" databaseId="mysql">
+        SELECT *
+        FROM employee e,
+             department d
+        WHERE e.dep_id = d.dep_id
+          AND e.id = 1;
+    </select>
+
+
+    <resultMap type="com.test.maybatis.guide.bean.Employee" id="empCascadeDep2">
+        <!-- 设置主键映射 -->
+        <id column="id" property="id"/>
+        <!-- 普通字段映射 -->
+        <result column="last_name" property="lastName"/>
+        <result column="email" property="email"/>
+        <result column="gender" property="gender"/>
+        <!-- 级联查询部门 -->
+        <association property="dep">
+            <id column="dep_id" property="depId"></id>
+            <result column="dep_name" property="depName"></result>
+        </association>
+    </resultMap>
+    <select id="getEmpByIdWithDep2" resultMap="empCascadeDep2" databaseId="mysql">
+        SELECT *
+        FROM employee e,
+             department d
+        WHERE e.dep_id = d.dep_id
+          AND e.id = 1;
+    </select>
+
+
+    <resultMap id="empCascadeDep3" type="com.test.maybatis.guide.bean.Employee">
+        <id property="id" column="id"/>
+        <result property="lastName" column="last_name"></result>
+        <result property="email" column="email"></result>
+        <result property="gender" column="gender"></result>
+        <result property="date" column="date"></result>
+        <association property="dep" select="com.test.maybatis.guide.dao.DepartmentMapper.getDepById" column="dep_id">
+        </association>
+    </resultMap>
+    <select id="getEmpByIdWithDep3" resultMap="empCascadeDep3" databaseId="mysql">
+        SELECT *
+        FROM `employee`
+        WHERE `id` = 1;
+    </select>
+
+
+    <select id="getEmpByDepId" resultType="com.test.maybatis.guide.bean.Employee" databaseId="mysql">
+        SELECT *
+        FROM `employee`
+        WHERE dep_id = #{depId}
+    </select>
+
+    <resultMap id="depWithGirl" type="com.test.maybatis.guide.bean.Employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="email" property="email"/>
+        <result column="gender" property="gender"/>
+        <discriminator javaType="string" column="gender">
+            <case value="女" resultType="com.test.maybatis.guide.bean.Employee">
+                <association property="dep" select="com.test.maybatis.guide.dao.DepartmentMapper.getDepById"
+                             column="dep_id">
+                </association>
+            </case>
+        </discriminator>
+    </resultMap>
+
+    <select id="getDepWithGirl" resultMap="depWithGirl" databaseId="mysql">
+        SELECT *
+        FROM `employee`
+        WHERE id = #{id}
+    </select>
+
+
+    <sql id="selectEmp"> ${alias}.email</sql>
+    <select id="getSqlTag" resultType="map" databaseId="mysql">
+        SELECT
+        <include refid="selectEmp"> <property name="alias" value="t1"/></include>
+        FROM `employee` t1
+        WHERE id = #{id}
+    </select>
+
+
+
+    <sql id="sometable">
+        ${prefix}loyee
+    </sql>
+    <sql id="someinclude">
+        from
+        <include refid="${include_target}"/>
+    </sql>
+    <select id="getSqlTag2" resultType="map">
+        select
+        last_name, gender, email
+        <include refid="someinclude">
+            <property name="prefix" value="emp"/>
+            <property name="include_target" value="sometable"/>
+        </include>
+    </select>
+
+
+    <select id="getDynamicSql" databaseId="mysql" resultType="com.test.maybatis.guide.bean.Employee">
+        SELECT * FROM
+        `employee`
+        <if test ="id!=3" >where id = #{id}</if>
+    </select>
+
+
+    <select id="getDynamicSql2" resultType="com.test.maybatis.guide.bean.Employee">
+        select * from employee   <!--这里可以用where 1=1 以便后面的都可用and,但是1=1跟业务没关系，因此不推荐这种写法，所以这里使用<where>标签    -->
+        <where>
+            <if test="id!=null">
+                and id = #{id}
+            </if>
+            <if test="lastName!=null">
+                and last_name like #{lastName}
+            </if>
+            <if test="email!=null">
+                and email like #{email}
+            </if>
+            <if test="gender!=null">
+                and gender like #{gender}
+            </if>
+        </where>
+    </select>
+
+
+    <update id="updateDynamicSql3" databaseId="mysql">
+        UPDATE `employee`
+        <set>
+            <if test="gender!=null">
+                gender = #{gender},
+            </if>
+            <if test="email!=null">
+                email = #{email},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+
+    <select id="getDynamicSqlTrim" resultType="com.test.maybatis.guide.bean.Employee">
+        select * from employee
+        <!--
+            trim：
+                prefix：给拼串后的整个字符串加一个前缀
+                prefixOverrides：去掉整个字符串前面多余的字符，支持或（|）
+                suffix：给拼串后的整个字符串加一个后缀
+                suffixOverrides：去掉整个字符串后面多余的字符，支持或（|）
+         -->
+        <trim prefix="where" suffixOverrides="AND | OR">
+            <if test="id!=null">
+                id = #{id} and
+            </if>
+            <if test="lastName!=null">
+                last_name like #{lastName} and
+            </if>
+            <if test="email!=null">
+                email like #{email} and
+            </if>
+            <if test="gender!=null">
+                gender like #{gender} and
+            </if>
+        </trim>
+    </select>
+
+
+
+    <update id="updateDynamicSqlTrim">
+        update employee
+        <!--
+            trim：
+                prefix：给拼串后的整个字符串加一个前缀
+                prefixOverrides：去掉整个字符串前面多余的字符，支持或（|）
+                suffix：给拼串后的整个字符串加一个后缀
+                suffixOverrides：去掉整个字符串后面多余的字符，支持或（|）
+         -->
+        <trim prefix="set" suffixOverrides=",">
+            <if test="lastName!=null">
+                last_name = #{lastName},
+            </if>
+            <if test="email!=null">
+                email = #{email},
+            </if>
+            <if test="gender!=null">
+                gender = #{gender},
+            </if>
+            <if test="dep!=null">
+                dep_id = #{dep.depId},
+            </if>
+        </trim>
+        where id = #{id}
+    </update>
+
+
+    <!--    其实这里的情况为什么不使用if进行判断呢？因为单纯的使用if判断，不适宜默认情况的执行，这时候使用choose (when, otherwise)就非常合适了。类似switch-->
+    <select id="getDynamicSqlChoose" resultType="com.test.maybatis.guide.bean.Employee" databaseId="mysql">
+        SELECT * FROM `employee`
+        <where>
+            <choose>
+                <when test="id!=null">
+                    id = #{id}
+                </when>
+                <when test="email!=null">
+                    email = #{email}
+                </when>
+                <otherwise>
+                    gender="女"
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+
+
+    <select id="getDynamicSqlForeach" resultType="com.test.maybatis.guide.bean.Employee">
+        select * from employee
+        <!--
+            foreach：
+                collection：指定要遍历的集合（list类型的参数会特殊处理封装在map中，map的key就叫list）
+                item：将当前遍历出的元素赋值给指定的变量
+                separator：每个元素之间的分隔符
+                open：遍历出所有结果拼接一个开始的字符串
+                close：遍历出所有结果拼接一个结束的字符串
+                index：遍历list的时候，index就是索引，item就是当前值
+                          遍历map的时候，index就是map的key，item就是map[key]的值
+
+            #{变量名}就能取出变量的值也就是当前遍历出的元素
+
+            collection:
+
+            1. 如果传入的是单参数且参数类型是一个List的时候，collection属性值为list
+            2. 如果传入的是单参数且参数类型是一个array数组的时候，collection的属性值为array
+            3. 如果传入的参数是多个的时候，我们就需要把它们封装成一个Map了，当然单参数也可;自己把参数封装成Map,对应mapper.xml 中collection的值为ids，是传入的参数Map的key
+
+            List ids = new ArrayList();
+            ids.add(1);
+            ids.add(13);
+            ids.add(14);
+            Map params = new HashMap();
+            params.put("ids", ids);
+            params.put("title", "中国");
+
+         -->
+        <foreach collection="ids" item="item_id" separator="," open="where id in(" close=")">
+            #{item_id}
+        </foreach>
+    </select>
+
+    <select id="getDynamicSqlBind" databaseId="mysql" resultType="com.test.maybatis.guide.bean.Employee">
+        <bind name="_last" value="'%'+lastName+'%'"/>
+        SELECT * FROM `employee` WHERE last_name LIKE #{_last}
+
+    </select>
+
+
+
+<!--
+（1）._parameter:代表整个参数
+        单个参数：_parameter就是这个参数。
+        多个参数：参数会被封装为一个map；_parameter就是代表这个map。
+
+（2）._databaseId:如果配置了databaseIdProvider标签。
+     _databaseId就是代表当前数据库的别名MySQL
+-->
+    <select id="getDynamicSqlInnerParams" databaseId="mysql" resultType="com.test.maybatis.guide.bean.Employee">
+        <!-- 必须有个if或者bind什么的，否则会报错    -->
+        <if  test="_parameter!=null">
+            SELECT * FROM  `employee` WHERE email = #{_parameter.lastName}
+        </if>
+    </select>
+
+</mapper>
